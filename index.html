@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>registro de calificaciones cetac 12</title>
+
+<style>
+
+/* MODO CLARO */
+:root{
+    color-scheme: light;
+}
+
+body {
+    margin:0;
+    font-family:Arial;
+    background:#e0fffb;
+    color:#003333;
+}
+
+/* LOGIN */
+#login {
+    text-align:center;
+    margin-top:100px;
+}
+
+/* INPUTS */
+input {
+    padding:15px;
+    margin:5px;
+    border:2px solid #2dd4bf;
+    border-radius:8px;
+    background:white;
+    color:#003333;
+}
+
+/* BOTONES */
+button {
+    padding:8px 12px;
+    background:#00e0c6;
+    color:#003333;
+    border:none;
+    cursor:pointer;
+    border-radius:8px;
+    font-weight:bold;
+    transition:0.2s;
+}
+
+button:hover {
+    background:#00bfa6;
+    transform:scale(1.05);
+}
+
+/* NAVBAR HORIZONTAL */
+.sidebar {
+    width:100%;
+    height:60px;
+    background:#00bfa6;
+    position:fixed;
+    top:0;
+    left:0;
+    display:flex;
+    align-items:center;
+    padding:0 10px;
+    z-index:1000;
+}
+
+.sidebar h2 {
+    margin-right:20px;
+    color:white;
+}
+
+.sidebar button {
+    width:auto;
+    margin:0 5px;
+    padding:10px 15px;
+    color:white;
+    background:none;
+}
+
+.sidebar button:hover {
+    background:#008f7a;
+}
+
+/* CONTENIDO */
+.main {
+    margin-top:70px;
+    padding:20px;
+}
+
+/* TARJETAS */
+.card {
+    background:white;
+    padding:20px;
+    margin:10px 0;
+    border-radius:12px;
+    color:#003333;
+    box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+
+/* TABLAS */
+table {
+    width:100%;
+    border-collapse:collapse;
+    background:white;
+}
+
+td, th {
+    border:1px solid #b2f5ea;
+    padding:8px;
+    text-align:center;
+}
+
+th {
+    background:#00e0c6;
+}
+
+/* ANIMACIÓN DE SECCIONES */
+.seccion {
+    display:none;
+    opacity:0;
+    transform:translateX(40px);
+    transition: all 0.4s ease;
+}
+
+.seccion.activa {
+    display:block;
+    opacity:1;
+    transform:translateX(0);
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+    <h2>Sistema CETAC 12</h2>
+    <input id="usuario" placeholder="Usuario"><br>
+    <input id="password" type="password" placeholder="Contraseña"><br>
+    <button onclick="entrar()">Ingresar</button>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;">
+
+<div class="sidebar">
+    <h2>CETAC 12</h2>
+    <button onclick="mostrar('dashboard')">Inicio</button>
+    <button onclick="mostrar('registro')">Registrar</button>
+    <button onclick="mostrar('lista')">Alumnos</button>
+    <button onclick="mostrar('calificaciones')">Calificaciones</button>
+</div>
+
+<div class="main">
+
+<div id="dashboard" class="seccion activa">
+    <div class="card">
+        <h2>Panel Principal</h2>
+        <p>Sistema escolar con gestión completa</p>
+    </div>
+</div>
+
+<div id="registro" class="seccion">
+    <div class="card">
+        <h2>Registrar Alumno</h2>
+        <input id="nombre" placeholder="Nombre">
+        <input id="grupo" placeholder="Grupo">
+        <button onclick="registrar()">Guardar</button>
+    </div>
+</div>
+
+<div id="lista" class="seccion">
+    <div class="card">
+        <h2>Lista de Alumnos</h2>
+        <table id="tablaAlumnos"></table>
+    </div>
+</div>
+
+<div id="calificaciones" class="seccion">
+    <div class="card">
+        <h2>Agregar Calificación</h2>
+        <select id="alumnoCal"></select>
+        <input id="calificacion" placeholder="Calificación">
+        <button onclick="guardarCalificacion()">Guardar</button>
+    </div>
+
+    <div class="card">
+        <h2>Calificaciones</h2>
+        <table id="tablaCalificaciones"></table>
+    </div>
+</div>
+
+</div>
+</div>
+
+<script>
+
+// LOGIN
+function entrar(){
+    let u=document.getElementById("usuario").value;
+    let p=document.getElementById("password").value;
+
+    if(u==="admin" && p==="1234"){
+        document.getElementById("login").style.display="none";
+        document.getElementById("app").style.display="block";
+        cargarAlumnos();
+        cargarCalificaciones();
+        actualizarSelectAlumnos();
+    } else alert("Error");
+}
+
+// NAVEGACIÓN CON ANIMACIÓN
+function mostrar(sec){
+    let actual = document.querySelector(".seccion.activa");
+
+    if(actual){
+        actual.style.opacity = "0";
+        actual.style.transform = "translateX(40px)";
+
+        setTimeout(()=>{
+            actual.classList.remove("activa");
+
+            let nueva = document.getElementById(sec);
+            nueva.classList.add("activa");
+
+            setTimeout(()=>{
+                nueva.style.opacity = "1";
+                nueva.style.transform = "translateX(0)";
+            },50);
+
+        },200);
+    }
+}
+
+// REGISTRAR
+function registrar(){
+    let nombre=document.getElementById("nombre").value;
+    let grupo=document.getElementById("grupo").value;
+
+    if(nombre==="" || grupo===""){
+        alert("Completa todos los campos");
+        return;
+    }
+
+    let alumnos=JSON.parse(localStorage.getItem("alumnos"))||[];
+    alumnos.push({nombre,grupo});
+    localStorage.setItem("alumnos",JSON.stringify(alumnos));
+
+    cargarAlumnos();
+    actualizarSelectAlumnos();
+
+    document.getElementById("nombre").value="";
+    document.getElementById("grupo").value="";
+}
+
+// MOSTRAR ALUMNOS
+function cargarAlumnos(){
+    let tabla=document.getElementById("tablaAlumnos");
+    let alumnos=JSON.parse(localStorage.getItem("alumnos"))||[];
+
+    tabla.innerHTML="<tr><th>Nombre</th><th>Grupo</th><th>Acciones</th></tr>";
+
+    alumnos.forEach((a,i)=>{
+        tabla.innerHTML+=`
+        <tr>
+        <td>${a.nombre}</td>
+        <td>${a.grupo}</td>
+        <td>
+        <button onclick="editar(${i})">Editar</button>
+        <button onclick="eliminar(${i})">Eliminar</button>
+        </td>
+        </tr>`;
+    });
+}
+
+// EDITAR
+function editar(i){
+    let alumnos=JSON.parse(localStorage.getItem("alumnos"));
+    let nuevoNombre=prompt("Nuevo nombre:", alumnos[i].nombre);
+    let nuevoGrupo=prompt("Nuevo grupo:", alumnos[i].grupo);
+
+    if(nuevoNombre && nuevoGrupo){
+        alumnos[i]={nombre:nuevoNombre,grupo:nuevoGrupo};
+        localStorage.setItem("alumnos",JSON.stringify(alumnos));
+        cargarAlumnos();
+        actualizarSelectAlumnos();
+    }
+}
+
+// ELIMINAR
+function eliminar(i){
+    let alumnos=JSON.parse(localStorage.getItem("alumnos"));
+    alumnos.splice(i,1);
+    localStorage.setItem("alumnos",JSON.stringify(alumnos));
+    cargarAlumnos();
+    actualizarSelectAlumnos();
+}
+
+// SELECT AUTOMÁTICO
+function actualizarSelectAlumnos(){
+    let select=document.getElementById("alumnoCal");
+    let alumnos=JSON.parse(localStorage.getItem("alumnos"))||[];
+
+    select.innerHTML="";
+    alumnos.forEach(a=>{
+        let option=document.createElement("option");
+        option.value=a.nombre;
+        option.textContent=a.nombre+" ("+a.grupo+")";
+        select.appendChild(option);
+    });
+}
+
+// CALIFICACIONES
+function guardarCalificacion(){
+    let nombre=document.getElementById("alumnoCal").value;
+    let cal=parseFloat(document.getElementById("calificacion").value);
+
+    if(isNaN(cal)){
+        alert("Calificación inválida");
+        return;
+    }
+
+    let datos=JSON.parse(localStorage.getItem("calificaciones"))||[];
+    datos.push({nombre,cal});
+    localStorage.setItem("calificaciones",JSON.stringify(datos));
+
+    document.getElementById("calificacion").value="";
+    cargarCalificaciones();
+}
+
+// MOSTRAR CALIFICACIONES
+function cargarCalificaciones(){
+    let tabla=document.getElementById("tablaCalificaciones");
+    let datos=JSON.parse(localStorage.getItem("calificaciones"))||[];
+
+    tabla.innerHTML="<tr><th>Nombre</th><th>Calificación</th><th>Acción</th></tr>";
+
+    let suma=0;
+
+    datos.forEach((c,i)=>{
+        suma+=c.cal;
+
+        tabla.innerHTML+=`
+        <tr>
+        <td>${c.nombre}</td>
+        <td>${c.cal}</td>
+        <td><button onclick="eliminarCal(${i})">Eliminar</button></td>
+        </tr>`;
+    });
+
+    let promedio=datos.length? (suma/datos.length).toFixed(2):0;
+
+    tabla.innerHTML+=`
+    <tr>
+    <td><b>PROMEDIO</b></td>
+    <td colspan="2"><b>${promedio}</b></td>
+    </tr>`;
+}
+
+// ELIMINAR CALIFICACIÓN
+function eliminarCal(i){
+    let datos=JSON.parse(localStorage.getItem("calificaciones"));
+    datos.splice(i,1);
+    localStorage.setItem("calificaciones",JSON.stringify(datos));
+    cargarCalificaciones();
+}
+
+
+<link rel="stylesheet" href="style.css">
+<script src="script.js"></script>
+
+
+
+
+
+</script>
+
+</body>
+</html>
